@@ -2,10 +2,11 @@ const express = require("express");
 const fetch = require("node-fetch");
 const Planet = require("../../app/Planet/Planet"); // Adjust the path as necessary
 const {peopleFactory} = require("../../app/People/index");
+const convertToWookieeLang = require("../../app/utils/wookieeConverter");
 
 const server = express();
 
-const _isWookieeFormat = (req) => req.query.format === "wookiee";
+const _isWookieeLang = (req) => req.query.lang === "wookiee";
 
 const getRandomId = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -41,21 +42,24 @@ const applySwapiEndpoints = (server, app) => {
   server.get("/hfswapi/getPeople/:id", async (req, res) => {
     try {
       const id = req.params.id;
-      const format = _isWookieeFormat(req) ? "wookiee" : "common";
-      const person = await peopleFactory(id, format);
+      const person = await peopleFactory(id);
 
       const response = {
-        id: person.getId(),
-        name: person.getName(),
+        personId: person.getId(),
+        personName: person.getName(),
         mass: person.getMass(),
         height: person.getHeight(),
         homeworldName: person.getHomeworldName(),
         homeworlId: person.getHomeworlId(),
       };
 
-      res.json(response);
+      if (_isWookieeLang(req)) {
+        res.json(convertToWookieeLang(response));
+      } else {
+        res.json(response);
+      }
     } catch (error) {
-      res.sendStatus(501).json({error: "Failed to fetch planet data"});
+      res.status(501).json({error: "Failed to fetch person data"});
     }
   });
 
@@ -64,11 +68,17 @@ const applySwapiEndpoints = (server, app) => {
       const planetId = req.params.id;
       const planet = new Planet(planetId);
       await planet.init();
-      res.json({
-        id: planet.id,
-        name: planet.getName(),
+
+      const response = {
+        planetId: planet.id,
+        planetName: planet.getName(),
         gravity: planet.getGravity(),
-      });
+      };
+      if (_isWookieeLang(req)) {
+        res.json(convertToWookieeLang(response));
+      } else {
+        res.json(response);
+      }
     } catch (error) {
       res.status(501).json({error: "Failed to fetch planet data"});
     }
@@ -106,13 +116,19 @@ const applySwapiEndpoints = (server, app) => {
         weightOnPlanet = "The person weight is undefined";
       }
 
-      res.json({
-        personId: person.id,
-        personName: person.name,
+      const response = {
+        personId: person.getId(),
+        personName: person.getName(),
         planetId: planet.id,
         planetName: planet.getName(),
         weightOnPlanet: weightOnPlanet,
-      });
+      };
+
+      if (_isWookieeLang(req)) {
+        res.json(convertToWookieeLang(response));
+      } else {
+        res.json(response);
+      }
     } catch (error) {
       console.error("Error:", error.message);
       res.status(500).json({error: error.message});
