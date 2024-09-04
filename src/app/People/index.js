@@ -1,4 +1,3 @@
-const WookieePeople = require("./wookiePeople");
 const CommonPeople = require("./CommonPeople");
 
 const peopleFactory = async (id, lang) => {

@@ -73,8 +73,10 @@ class AbstractPeople {
     return this.homeworlId;
   }
 
-  getWeightOnPlanet(planetId) {
-    throw new Error("To be implemented");
+  getWeightOnPlanet(mass, gravity) {
+    const weight = parseFloat(mass);
+    const g = parseFloat(gravity.split(" ")[0]);
+    return weight * g;
   }
 }
 
